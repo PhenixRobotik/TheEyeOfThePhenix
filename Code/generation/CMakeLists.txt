@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 2.8)
+project( Generate )
+find_package( OpenCV REQUIRED )
+add_executable( Generate generate.cpp )
+target_link_libraries( Generate ${OpenCV_LIBS} )
