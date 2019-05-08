@@ -1,0 +1,7 @@
+build
+__pycache__
+*.FCStd1
+*.png
+*.jpg
+*.mp4
+*.avi
