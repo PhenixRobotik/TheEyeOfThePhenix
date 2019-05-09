@@ -3,3 +3,6 @@ project( DisplayImage )
 find_package( OpenCV REQUIRED )
 add_executable( DisplayImage display.cpp )
 target_link_libraries( DisplayImage ${OpenCV_LIBS} )
+
+add_executable( Record record20.cpp )
+target_link_libraries( Record ${OpenCV_LIBS} )

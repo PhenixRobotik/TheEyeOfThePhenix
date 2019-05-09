@@ -25,5 +25,9 @@ pour tester la caméra:
 ```
 raspistill -vf -hf -o cam.jpg
 ```
+Pour ouvrir la caméra du raspberry normalement:
+```
+modprobe bcm2835-v4l2
+```
 La détection des robots est inspirée de cette page:  
 https://docs.opencv.org/4.1.0/d5/dae/tutorial_aruco_detection.html
