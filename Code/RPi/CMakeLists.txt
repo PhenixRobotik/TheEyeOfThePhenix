@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 2.8)
+project( TheEyeOfThePhenix )
+find_package( OpenCV REQUIRED )
+FIND_PACKAGE(Threads REQUIRED )
+add_executable( Eye main.cpp detection.cpp)
+target_link_libraries( Eye ${OpenCV_LIBS} ${CMAKE_THREAD_LIBS_INIT} )

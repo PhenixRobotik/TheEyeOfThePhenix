@@ -11,7 +11,7 @@ using namespace std;
 using namespace cv;
 
 #define DICT aruco::DICT_4X4_50
-#define MARKER_SIDE 53//in mm to get mm at the output
+#define MARKER_SIDE 62.5//in mm to get mm at the output
 
 int readCameraParameters(Mat &cameraMatrix,Mat &distCoeffs )
 {
