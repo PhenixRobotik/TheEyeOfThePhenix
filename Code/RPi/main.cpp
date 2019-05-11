@@ -4,6 +4,7 @@
 #include <string>
 
 #include "detection.h"
+#include "transmission.h"
 
 using namespace cv;
 using namespace std;
@@ -24,7 +25,7 @@ int main(int, char**)
     cap >> frame;
     cout<<"image W:"<<frame.cols<<" image H:"<<frame.rows<<" fps:"<<fps_cam<<endl;
 
-    int file_number=0;
+    int file_number=0;//find a free file name
     string file_name_base="../output/out";
     stringstream file_name;
     file_name.str("");
@@ -47,6 +48,9 @@ int main(int, char**)
     ofstream outputFile(file_name.str());
     outputFile<<"image W,"<<frame.cols<<" image H,"<<frame.rows<<" fps,"<<fps_cam<<endl;
 
+    transmitter t;
+    stringstream to_transmit;
+
     Detector ddd;
     ddd.start();
 
@@ -55,6 +59,7 @@ int main(int, char**)
 
     while(1)//main loop reading camera and feeding the aruco detection
     {
+
         cap >> frame; // get a new frame from camera
         ddd.send_image(frame,i);
         video.write(frame);
@@ -63,13 +68,14 @@ int main(int, char**)
         auto stop_time = chrono::high_resolution_clock::now();
         chrono::duration<double> elapsed = stop_time - start_time;//get time from start
 
-        outputFile<<elapsed.count()<<","<<i<<","<<output_id<<","<<time<<","<<ids_markers.size()<<endl;//log to file
+        to_transmit.str("");
+
+        to_transmit<<elapsed.count()<<","<<i<<","<<output_id<<","<<time<<","<<ids_markers.size()<<endl;//log to file
         if (ids_markers.size()>0)
         {
           for(int j=0;j<ids_markers.size();j++)
           {
-            cout<<detected_corners[j].size()<<endl;
-            outputFile<<ids_markers[j]<<","<<angles[j][0]<<","<<angles[j][1]<<","<<angles[j][2]
+            to_transmit<<ids_markers[j]<<","<<angles[j][0]<<","<<angles[j][1]<<","<<angles[j][2]
             <<","<<positions[j][0]<<","<<positions[j][1]<<","<<positions[j][2]
             <<","<<detected_corners[j][0].x<<","<<detected_corners[j][0].y
             <<","<<detected_corners[j][1].y<<","<<detected_corners[j][1].y
@@ -77,13 +83,17 @@ int main(int, char**)
             <<","<<detected_corners[j][3].x<<","<<detected_corners[j][3].y<<endl;
           }
         }
-        outputFile<<endl;
+        to_transmit<<endl;
+        outputFile<<to_transmit.str();
+
+        t.transmit_position(to_transmit.str().c_str());
 
         imshow("debug",frame);
         if(waitKey(30) >= 0) break;
         i++;
     }
 
+    t.end();
     ddd.stop();
     cap.release();
     video.release();
