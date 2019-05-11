@@ -48,7 +48,9 @@ int main(int, char**)
     ofstream outputFile(file_name.str());
     outputFile<<"image W,"<<frame.cols<<" image H,"<<frame.rows<<" fps,"<<fps_cam<<endl;
 
+    int run=1;
     transmitter t;
+    char ret;
     stringstream to_transmit;
 
     Detector ddd;
@@ -57,7 +59,7 @@ int main(int, char**)
     unsigned int i=0,output_id=0;
     auto start_time = chrono::high_resolution_clock::now();
 
-    while(1)//main loop reading camera and feeding the aruco detection
+    while(run)//main loop reading camera and feeding the aruco detection
     {
 
         cap >> frame; // get a new frame from camera
@@ -86,10 +88,14 @@ int main(int, char**)
         to_transmit<<endl;
         outputFile<<to_transmit.str();
 
-        t.transmit_position(to_transmit.str().c_str());
+        ret=t.transmit_position(to_transmit.str().c_str());
+        if(ret=='q')
+        {
+          run=0;
+        }
 
-        imshow("debug",frame);
-        if(waitKey(30) >= 0) break;
+        //imshow("debug",frame);
+        //if(waitKey(30) >= 0) break;
         i++;
     }
 
