@@ -1,11 +1,11 @@
 #include "detection.h"
 
 
-Detector::Detector(double dt)
+Detector::Detector()
 {
-  pause_time=dt;
   readCameraParameters();
   dictionary = aruco::getPredefinedDictionary(DICT);
+  isnew=0;
 }
 
 int Detector::readCameraParameters()
@@ -15,7 +15,7 @@ int Detector::readCameraParameters()
   string line;
   ifstream calibfile;
 
-  calibfile.open ("../calibration.txt");
+  calibfile.open ("../calibration.txt");//TODO: add error code if wrong file
   getline(calibfile,line);//text
   for(int i=0;i<3;i++)
   {
@@ -52,15 +52,53 @@ void Detector::stop()
 
 void Detector::send_image(Mat &img)
 {
-  img_orig=img;
+  write_mutex.lock();
+  isnew=1;
+  img.copyTo(img_orig);//image stored in img_orig
+  write_mutex.unlock();
 }
 
 void Detector::loop()
 {
+  Mat img;
+  vector<int> ids_int;
+  vector<vector<Point2f> > corners_int;
+  vector<Vec3d> rvecs_int, tvecs_int;
+
   while(run)
   {
-    imshow("debug2",img_orig);
-    usleep(pause_time*1e+6);
+    if (isnew==1)
+    {
+      write_mutex.lock();
+      isnew=0;
+      img_orig.copyTo(img);//working on img and not img_orig
+      write_mutex.unlock();
+
+      aruco::detectMarkers(img, dictionary, corners_int, ids_int);
+      aruco::estimatePoseSingleMarkers(corners_int, MARKER_SIDE, cameraMatrix, distCoeffs, rvecs_int, tvecs_int);
+
+      read_mutex.lock();
+      ids=ids_int;
+      corners=corners_int;
+      rvecs=rvecs_int;
+      tvecs=tvecs_int;
+      read_mutex.unlock();
+    }
+    else
+    {
+      usleep(SLEEP_TIME);//sleep in useconds
+    }
   }
+  return;
+}
+
+void Detector::get_pose(vector<int> &ids_markers,vector<vector<Point2f> > &detected_corners,vector<Vec3d> &angles,vector<Vec3d> &positions)
+{
+  read_mutex.lock();
+  ids_markers=ids;
+  detected_corners=corners;
+  angles=rvecs;
+  positions=tvecs;
+  read_mutex.unlock();
   return;
 }

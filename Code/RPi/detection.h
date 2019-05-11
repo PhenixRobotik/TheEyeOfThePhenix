@@ -5,7 +5,9 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+
 #include <thread>
+#include <mutex>
 
 #include <unistd.h>
 
@@ -17,6 +19,7 @@ using namespace cv;
 
 #define DICT aruco::DICT_4X4_50
 #define MARKER_SIDE 62.5//in mm to get mm at the output
+#define SLEEP_TIME 10000//in useconds, time slept if no new image before checking again
 
 class Detector
 {
@@ -28,16 +31,22 @@ class Detector
     Ptr<cv::aruco::Dictionary> dictionary;
 
     thread loop_thread;
-    double pause_time;
+    mutex write_mutex;
+    mutex read_mutex;
     int run;
+    int isnew;
 
     Mat img_orig;
 
+    vector<int> ids;
+    vector<vector<Point2f> > corners;
+    vector<Vec3d> rvecs, tvecs;
     void loop();
 
   public:
-    Detector(double dt);
+    Detector();
     void start();
     void stop();
     void send_image(Mat &img);
+    void get_pose(vector<int> &ids_markers,vector<vector<Point2f> > &detected_corners,vector<Vec3d> &angles,vector<Vec3d> &positions);
 };
