@@ -9,6 +9,7 @@
 #include <thread>
 #include <mutex>
 
+#include <chrono>
 #include <unistd.h>
 
 #include <opencv2/opencv.hpp>
@@ -37,16 +38,20 @@ class Detector
     int isnew;
 
     Mat img_orig;
+    unsigned int input_frame_id;
+    unsigned int output_frame_id;
 
     vector<int> ids;
     vector<vector<Point2f> > corners;
     vector<Vec3d> rvecs, tvecs;
     void loop();
+    double loop_time;
 
   public:
     Detector();
     void start();
     void stop();
-    void send_image(Mat &img);
-    void get_pose(vector<int> &ids_markers,vector<vector<Point2f> > &detected_corners,vector<Vec3d> &angles,vector<Vec3d> &positions);
+    void send_image(Mat &img,unsigned int frame_id);
+    void get_pose(vector<int> &ids_markers,vector<vector<Point2f> > &detected_corners,vector<Vec3d> &angles,vector<Vec3d> &positions,
+       double &time,unsigned int &frame_id);
 };

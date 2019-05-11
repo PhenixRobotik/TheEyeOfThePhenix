@@ -6,6 +6,8 @@ Detector::Detector()
   readCameraParameters();
   dictionary = aruco::getPredefinedDictionary(DICT);
   isnew=0;
+  output_frame_id=0;
+  loop_time=0;
 }
 
 int Detector::readCameraParameters()
@@ -50,11 +52,12 @@ void Detector::stop()
   loop_thread.join();
 }
 
-void Detector::send_image(Mat &img)
+void Detector::send_image(Mat &img,unsigned int frame_id)
 {
   write_mutex.lock();
   isnew=1;
   img.copyTo(img_orig);//image stored in img_orig
+  input_frame_id=frame_id;
   write_mutex.unlock();
 }
 
@@ -64,24 +67,32 @@ void Detector::loop()
   vector<int> ids_int;
   vector<vector<Point2f> > corners_int;
   vector<Vec3d> rvecs_int, tvecs_int;
+  unsigned int frame_id;
 
   while(run)
   {
     if (isnew==1)
     {
+      auto start = std::chrono::high_resolution_clock::now();
+
       write_mutex.lock();
       isnew=0;
       img_orig.copyTo(img);//working on img and not img_orig
+      frame_id=input_frame_id;
       write_mutex.unlock();
 
       aruco::detectMarkers(img, dictionary, corners_int, ids_int);
       aruco::estimatePoseSingleMarkers(corners_int, MARKER_SIDE, cameraMatrix, distCoeffs, rvecs_int, tvecs_int);
+      auto stop = std::chrono::high_resolution_clock::now();
+      chrono::duration<double> elapsed = stop - start;
 
       read_mutex.lock();
       ids=ids_int;
       corners=corners_int;
       rvecs=rvecs_int;
       tvecs=tvecs_int;
+      loop_time=elapsed.count();
+      output_frame_id=frame_id;
       read_mutex.unlock();
     }
     else
@@ -92,13 +103,16 @@ void Detector::loop()
   return;
 }
 
-void Detector::get_pose(vector<int> &ids_markers,vector<vector<Point2f> > &detected_corners,vector<Vec3d> &angles,vector<Vec3d> &positions)
+void Detector::get_pose(vector<int> &ids_markers,vector<vector<Point2f> > &detected_corners,vector<Vec3d> &angles,vector<Vec3d> &positions,
+                        double &time,unsigned int &frame_id)
 {
   read_mutex.lock();
   ids_markers=ids;
   detected_corners=corners;
   angles=rvecs;
   positions=tvecs;
+  time=loop_time;
+  frame_id=output_frame_id;
   read_mutex.unlock();
   return;
 }
