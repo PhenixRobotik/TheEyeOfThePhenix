@@ -26,17 +26,17 @@ int main(int, char**)
     cout<<"image W:"<<frame.cols<<" image H:"<<frame.rows<<" fps:"<<fps_cam<<endl;
 
     int file_number=0;//find a free file name
-    string file_name_base="../output/out";
+    string file_name_base="/home/pi/RPi/output/out";
     stringstream file_name;
     file_name.str("");
-    file_name<<"../output/out"<<file_number<<".avi";
+    file_name<<"/home/pi/RPi/output/out"<<file_number<<".avi";
     ifstream f(file_name.str());
     while(f.good())
     {
       f.close();
       file_number++;
       file_name.str("");
-      file_name<<"../output/out"<<file_number<<".avi";
+      file_name<<"/home/pi/RPi/output/out"<<file_number<<".avi";
       f.open(file_name.str());
     }
     cout<<"File number "<<file_number<<endl;
@@ -44,7 +44,7 @@ int main(int, char**)
     VideoWriter video(file_name.str(),VideoWriter::fourcc('M','J','P','G'),fps_cam, Size(frame.cols,frame.rows));
 
     file_name.str("");
-    file_name<<"../output/out"<<file_number<<".csv";
+    file_name<<"/home/pi/RPi/output/out"<<file_number<<".csv";
     ofstream outputFile(file_name.str());
     outputFile<<"image W,"<<frame.cols<<" image H,"<<frame.rows<<" fps,"<<fps_cam<<endl;
 
@@ -59,44 +59,52 @@ int main(int, char**)
     unsigned int i=0,output_id=0;
     auto start_time = chrono::high_resolution_clock::now();
 
-    while(run)//main loop reading camera and feeding the aruco detection
+    while(run!=0)//main loop reading camera and feeding the aruco detection
     {
 
         cap >> frame; // get a new frame from camera
-        ddd.send_image(frame,i);
-        video.write(frame);
-        ddd.get_pose(ids_markers, detected_corners, angles, positions,time,output_id);
+	if(run==2)
+	{
+          ddd.send_image(frame,i);
+          video.write(frame);
+          ddd.get_pose(ids_markers, detected_corners, angles, positions,time,output_id);
 
-        auto stop_time = chrono::high_resolution_clock::now();
-        chrono::duration<double> elapsed = stop_time - start_time;//get time from start
+          auto stop_time = chrono::high_resolution_clock::now();
+          chrono::duration<double> elapsed = stop_time - start_time;//get time from start
 
-        to_transmit.str("");
+          to_transmit.str("");
 
-        to_transmit<<elapsed.count()<<","<<i<<","<<output_id<<","<<time<<","<<ids_markers.size()<<endl;//log to file
-        if (ids_markers.size()>0)
-        {
-          for(int j=0;j<ids_markers.size();j++)
+          to_transmit<<elapsed.count()<<","<<i<<","<<output_id<<","<<time<<","<<ids_markers.size()<<endl;//log to file
+          if (ids_markers.size()>0)
           {
-            to_transmit<<ids_markers[j]<<","<<angles[j][0]<<","<<angles[j][1]<<","<<angles[j][2]
-            <<","<<positions[j][0]<<","<<positions[j][1]<<","<<positions[j][2]
-            <<","<<detected_corners[j][0].x<<","<<detected_corners[j][0].y
-            <<","<<detected_corners[j][1].y<<","<<detected_corners[j][1].y
-            <<","<<detected_corners[j][2].x<<","<<detected_corners[j][2].y
-            <<","<<detected_corners[j][3].x<<","<<detected_corners[j][3].y<<endl;
+            for(int j=0;j<ids_markers.size();j++)
+            {
+              to_transmit<<ids_markers[j]<<","<<angles[j][0]<<","<<angles[j][1]<<","<<angles[j][2]
+              <<","<<positions[j][0]<<","<<positions[j][1]<<","<<positions[j][2]
+              <<","<<detected_corners[j][0].x<<","<<detected_corners[j][0].y
+              <<","<<detected_corners[j][1].y<<","<<detected_corners[j][1].y
+              <<","<<detected_corners[j][2].x<<","<<detected_corners[j][2].y
+              <<","<<detected_corners[j][3].x<<","<<detected_corners[j][3].y<<endl;
+            }
           }
-        }
-        to_transmit<<endl;
-        outputFile<<to_transmit.str();
+          to_transmit<<endl;
+          outputFile<<to_transmit.str();
+	  i++;
+	}
 
         ret=t.transmit_position(to_transmit.str().c_str());
         if(ret=='q')
         {
           run=0;
         }
+	else if(ret=='s')
+	{
+	  run=2;
+	}
 
         //imshow("debug",frame);
         //if(waitKey(30) >= 0) break;
-        i++;
+        //i++;
     }
 
     t.end();

@@ -30,4 +30,10 @@ Pour ouvrir la caméra du raspberry normalement:
 modprobe bcm2835-v4l2
 ```
 La détection des robots est inspirée de cette page:  
-https://docs.opencv.org/4.1.0/d5/dae/tutorial_aruco_detection.html
+https://docs.opencv.org/4.1.0/d5/dae/tutorial_aruco_detection.html  
+
+Pour démarrer automatiquement au démarrage éditer le /etc/rc.local:  
+```
+modprobe bcm2835-v4l2
+nohup /home/pi/RPi/build/Eye &
+```

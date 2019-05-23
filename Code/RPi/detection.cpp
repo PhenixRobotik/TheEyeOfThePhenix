@@ -17,7 +17,7 @@ int Detector::readCameraParameters()
   string line;
   ifstream calibfile;
 
-  calibfile.open ("../calibration.txt");//TODO: add error code if wrong file
+  calibfile.open ("/home/pi/RPi/calibration.txt");//TODO: add error code if wrong file, or crash
   getline(calibfile,line);//text
   for(int i=0;i<3;i++)
   {

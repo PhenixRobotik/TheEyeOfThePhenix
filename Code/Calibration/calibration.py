@@ -13,10 +13,10 @@ objp[:,:2] = np.mgrid[0:6,0:4].T.reshape(-1,2)
 objpoints = [] # 3d point in real world space
 imgpoints = [] # 2d points in image plane.
 
-images = glob.glob('output/*.png')
+images = glob.glob('output/*.jpg')
 
 for fname in images:
-    img = cv2.imread(fname)
+    img = cv2.resize(cv2.imread(fname),(640,480))
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
     # Find the chess board corners
@@ -30,8 +30,9 @@ for fname in images:
         imgpoints.append(corners2)
 
         # Draw and display the corners
+        print(fname)
         img = cv2.drawChessboardCorners(img, (6,4), corners2,ret)
-        cv2.imshow('img',img)
+        cv2.imshow('img',cv2.resize(img,(640,480)))
         cv2.waitKey(500)
 
 cv2.destroyAllWindows()
